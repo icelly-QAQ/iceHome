@@ -6,7 +6,7 @@
 
 <template>
     <div class="home">
-        <h1>Myself</h1>
+        <h1>notes</h1>
     </div>
 </template>
 

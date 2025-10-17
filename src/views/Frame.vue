@@ -56,7 +56,23 @@
 }
 
 #menuButton {
+  margin-top: 0;
   margin-left: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.frame-root :deep(.n-layout-header .n-flex) {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.frame-root :deep(.n-layout-header #menuButton svg) {
+  width: 18px;
+  height: 18px;
+  display: block;
 }
 </style>
 
@@ -129,12 +145,15 @@
               :expand-icon="expandIcon"
             />
 
-            <n-flex justify="center">
-              <n-divider
-                position="absolute"
-                >
-                Powered by icelly_QAQ💗
+            <n-flex style="position: absolute; bottom: 10px; width: 100%;">
+              <n-divider>
+                Powered by icelly_QAQ
               </n-divider>
+            </n-flex>
+            <n-flex justify="center" style="position: absolute; bottom: 10px; width: 100%;">
+              <div>
+                💗使用 <a href="https://github.com/icelly-QAQ/iceHome">iceHome v0.1.0</a> 构建💗
+              </div>
             </n-flex>
           </n-layout-sider>
 
@@ -153,33 +172,76 @@
 
 <script setup lang="ts">
 import type { MenuOption } from "naive-ui";
-import { BookmarkOutline, CaretDownOutline } from "@vicons/ionicons5";
 import { NIcon } from "naive-ui";
-import { h, ref } from "vue";
+import { h, ref, type Component } from "vue";
 import { RouterLink } from "vue-router";
+
+import {
+  HomeOutline as HomeIcon,
+  PersonOutline as PersonIcon,
+  PeopleOutline as PeopleIcon,
+  InformationCircleOutline as AboutIcon,
+  BookOutline as ContentIcon,
+  TelescopeOutline as treeholeIcon,
+  CaretDownOutline,
+} from "@vicons/ionicons5";
+
+// 图标渲染辅助函数
+const renderIcon = (icon: Component) => {
+  return () => h(NIcon, null, { default: () => h(icon) });
+};
 
 const menuOptions: MenuOption[] = [
   {
     label: "首页",
     key: "home",
     href: "/",
+    icon: renderIcon(HomeIcon)
   },
   {
     label: "关于",
     key: "about",
+    icon: renderIcon(AboutIcon),
     children: [
       {
         label: "我自己",
         key: "myself",
         href: "/about/myself",
+        icon: renderIcon(PersonIcon)
       },
       {
         label: "朋友们",
         key: "friends",
         href: "/about/friends",
+        icon: renderIcon(PeopleIcon)
       },
     ],
   },
+  {
+    label: "内容",
+    key: "content",
+    icon: renderIcon(ContentIcon),
+    children: [
+      {
+        label: "文章",
+        key: "articles",
+        href: "/content/articles",
+        icon: renderIcon(ContentIcon)
+      },
+      {
+        label: "随笔",
+        key: "notes",
+        href: "/content/notes",
+        icon: renderIcon(ContentIcon)
+      }
+    ]
+  },
+  {
+    label: "树洞",
+    key: "treehole",
+    href: "/treehole",
+    icon: renderIcon(treeholeIcon) 
+  }
 ];
 
 const collapsed = ref(true);
@@ -190,7 +252,6 @@ const toggleSidebar = () => {
 };
 
 function renderMenuLabel(option: MenuOption) {
-  // 如果 menu option 中包含 href，并且以 http 开头，保留外部链接行为
   if ("href" in option && typeof option.href === "string") {
     const href = option.href as string;
     if (/^https?:\/\//.test(href)) {
@@ -200,7 +261,6 @@ function renderMenuLabel(option: MenuOption) {
         option.label as string
       );
     }
-    // 否则视为内部路由路径，使用 RouterLink 来进行 SPA 导航
     return h(
       RouterLink,
       { to: href },
@@ -211,11 +271,12 @@ function renderMenuLabel(option: MenuOption) {
 }
 
 function renderMenuIcon(option: MenuOption) {
-  // 渲染图标占位符以保持缩进
-  if (option.key === "sheep-man") return true;
-  // 返回 falsy 值，不再渲染图标及占位符
-  if (option.key === "food") return null;
-  return h(NIcon, null, { default: () => h(BookmarkOutline) });
+  // 如果选项有自定义图标，使用它
+  if (option.icon && typeof option.icon === 'function') {
+    return option.icon();
+  }
+  // 如果没有图标，返回 null 以避免占位符
+  return null;
 }
 
 function expandIcon() {

@@ -2,7 +2,7 @@
 #hero-card {
   border-radius: 15px;
   width: auto;
-  height: 200px;
+  height: auto;
   margin-top: 35vh;
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
@@ -13,9 +13,9 @@
 <template>
   <n-flex justify="center" class="home">
     <n-card id="hero-card" :bordered="false">
-      <n-flex justify="center" vertical align="center" style="padding: 20px; min-width: 300px; min-height: 150px;">
+      <n-flex justify="center" vertical align="center" style=" min-width: 300px; min-height: 150px;">
         <n-spin v-if="loading" size="small" />
-        <h1 v-else style="text-align: center; margin: 0;">
+        <h1 v-else style="text-align: center; margin-top: 25px;">
           {{ heroMessage }}
         </h1>
         <n-h2 style="margin-top: 25px;">
@@ -40,7 +40,7 @@ const getHeroMessage = async () => {
     const response = await axios.get('https://v1.hitokoto.cn/?encode=text')
     console.log('API响应:', response) // 添加日志查看响应
     
-    heroMessage.value = response.data.replace(/[.,;:!?。，；：！？]+$/, ''); // 去除结尾标点符号
+    heroMessage.value = response.data.replace(/[。]+$/, ''); // 去除结尾标点符号
 
   } catch (error) {
     console.error('获取数据失败:', error)

@@ -24,6 +24,7 @@
 import Frame from "@/views/Frame.vue";
 import { NLoadingBarProvider, useLoadingBar } from 'naive-ui';
 import { defineComponent, h } from 'vue';
+import type { RouteLocationNormalized, NavigationGuardNext } from 'vue-router';
 import { RouterView } from 'vue-router';
 import router from '@/router/router';
 
@@ -34,7 +35,7 @@ const AppContent = defineComponent({
     const loadingBar = useLoadingBar();
 
     // 监听路由变化来控制加载条
-    router.beforeEach((_to, _from, next) => {
+  router.beforeEach((_to: RouteLocationNormalized, _from: RouteLocationNormalized, next: NavigationGuardNext) => {
       // 开始显示加载条
       loadingBar.start();
       next();
