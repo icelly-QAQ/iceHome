@@ -21,7 +21,7 @@
 
 
 <script setup lang="ts">
-import Frame from "@/components/Frame.vue";
+import Frame from "@/views/Frame.vue";
 import { NLoadingBarProvider, useLoadingBar } from 'naive-ui';
 import { defineComponent, h } from 'vue';
 import { RouterView } from 'vue-router';

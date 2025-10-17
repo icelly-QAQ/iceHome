@@ -3,18 +3,18 @@ import { createRouter, createWebHashHistory } from 'vue-router'
 const routes = [
     {
         path: '/',
-        component:()=>import('@/components/home.vue')
+        component:()=>import('@/views/home.vue')
     },
     {
         path: '/about',
         children:[
             {
                 path: "myself",
-                component:()=>import('@/components/about/aboutMyself.vue')
+                component:()=>import('@/views/about/aboutMyself.vue')
             },
             {
                 path: "friends",
-                component:()=>import('@/components/about/aboutFriends.vue')
+                component:()=>import('@/views/about/aboutFriends.vue')
             }
         ]
     }
