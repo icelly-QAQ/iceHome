@@ -24,11 +24,23 @@
 
 <template>
   <n-flex style="padding: 15px">
+    
     <n-card class="card">
-      <n-h2>欢迎来到我的小窝！</n-h2>
-      <n-h3>这里是我的个人主页，记录着我的点点滴滴~</n-h3>
-      <n-h3>希望你能喜欢这里的一切喵~</n-h3>
+      <n-grid x-gap="1" :cols="2">
+        <n-gi>
+          <n-h2>欢迎来到我的小窝！</n-h2>
+          <n-h3>这里是我的个人主页，记录着我的点点滴滴~</n-h3>
+          <n-h3>希望你能喜欢这里的一切喵~</n-h3>
+        </n-gi>
+        <n-gi>
+          <div v-for="theme in themes" :key="theme.value" style="margin-right: 25px;">
+              小窝更新热力图
+            <n-heatmap :data="data" :color-theme="theme.value" />
+          </div>
+        </n-gi>
+      </n-grid>
     </n-card>
+
     <n-card class="card">
       <n-grid x-gap="60px" :cols="3">
         <n-gi>
@@ -126,4 +138,11 @@
 <script setup lang="ts">
 import BiliBiliIcon from '@/assets/static/svglogo/bilibili.svg';
 import GitHubIcon from '@/assets/static/svglogo/github.svg';
+import { heatmapMockData } from 'naive-ui'
+
+const data = heatmapMockData()
+
+const themes = [
+  { name: '绿色', value: 'green' },
+] as const
 </script>
