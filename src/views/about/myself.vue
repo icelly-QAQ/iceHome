@@ -182,7 +182,6 @@ import axios from 'axios'
 // 响应式数据
 const heatmapData = ref<Array<{ timestamp: number, value: number }>>([]);
 const loading = ref(false);
-const showDebug = ref(true);
 
 // 热力图需要的数据结构
 interface HeatmapItem {
@@ -193,40 +192,6 @@ interface HeatmapItem {
 // 今天日期
 const todayDate = computed(() => {
   return new Date().toISOString().split('T')[0];
-});
-
-// 实际日期范围（调试用）
-const actualDateRange = computed(() => {
-  if (!heatmapData.value.length) return '无数据';
-  
-  const dates = heatmapData.value.map(item => new Date(item.timestamp));
-  const startDate = new Date(Math.min(...dates.map(d => d.getTime())));
-  const endDate = new Date(Math.max(...dates.map(d => d.getTime())));
-  
-  return `${startDate.toISOString().split('T')[0]} 至 ${endDate.toISOString().split('T')[0]}`;
-});
-
-// 最近365条数据的日期范围
-const recentDateRange = computed(() => {
-  if (!finalHeatmapData.value.length) return '无数据';
-  
-  const dates = finalHeatmapData.value.map(item => new Date(item.timestamp));
-  const startDate = new Date(Math.min(...dates.map(d => d.getTime())));
-  const endDate = new Date(Math.max(...dates.map(d => d.getTime())));
-  
-  return `${startDate.toISOString().split('T')[0]} 至 ${endDate.toISOString().split('T')[0]}`;
-});
-
-// 有效数据计数
-const validDataCount = computed(() => {
-  return finalHeatmapData.value.filter(item => item.value > 0).length;
-});
-
-// 数据格式示例
-const dataFormatExample = computed(() => {
-  if (!finalHeatmapData.value.length) return '无数据';
-  const sample = finalHeatmapData.value.find(item => item.value > 0) || finalHeatmapData.value[0];
-  return sample ? `{ timestamp: ${sample.timestamp}, value: ${sample.value} }` : '无示例';
 });
 
 // 计算最近365条数据 - 严格保持 { timestamp: number, value: number } 格式
