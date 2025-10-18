@@ -18,13 +18,35 @@
   height: 24px;
   fill: currentColor;
 }
+
+.heatmap-container {
+  margin-right: 25px;
+}
+
+.heatmap-title {
+  margin-bottom: 10px;
+  font-weight: bold;
+  color: #333;
+}
+
+.heatmap-info {
+  margin-top: 8px;
+  font-size: 12px;
+  color: #666;
+}
+
+.debug-info {
+  margin-top: 10px;
+  padding: 8px;
+  background: #f5f5f5;
+  border-radius: 4px;
+  font-size: 12px;
+  color: #666;
+}
 </style>
-
-
 
 <template>
   <n-flex style="padding: 15px">
-    
     <n-card class="card">
       <n-grid x-gap="1" :cols="2">
         <n-gi>
@@ -33,9 +55,25 @@
           <n-h3>希望你能喜欢这里的一切喵~</n-h3>
         </n-gi>
         <n-gi>
-          <div v-for="theme in themes" :key="theme.value" style="margin-right: 25px;">
-              小窝更新热力图
-            <n-heatmap :data="data" :color-theme="theme.value" />
+          <div v-for="theme in themes" :key="theme.value" class="heatmap-container">
+            <div class="heatmap-title">蓝冰のgithub热力图</div>
+            <div>刷墙刷墙~</div>
+            <n-heatmap 
+              v-if="finalHeatmapData.length > 0" 
+              :data="finalHeatmapData" 
+              :color-theme="theme.value" 
+            />
+            <div v-else style="text-align: center; padding: 20px; color: #999;">
+              <n-spin v-if="loading" size="small" />
+              <div v-else>暂无数据</div>
+            </div>
+            
+            <div class="heatmap-info">
+              <n-spin v-if="loading" size="small" />
+              <template v-else>
+                显示时间: {{ displayDateRange }} | 数据天数: {{ finalHeatmapData.length }}
+              </template>
+            </div>
           </div>
         </n-gi>
       </n-grid>
@@ -136,13 +174,204 @@
 
 
 <script setup lang="ts">
+import { ref, onMounted, computed } from 'vue';
 import BiliBiliIcon from '@/assets/static/svglogo/bilibili.svg';
 import GitHubIcon from '@/assets/static/svglogo/github.svg';
-import { heatmapMockData } from 'naive-ui'
+import axios from 'axios'
 
-const data = heatmapMockData()
+// 响应式数据
+const heatmapData = ref<Array<{ timestamp: number, value: number }>>([]);
+const loading = ref(false);
+const showDebug = ref(true);
 
+// 热力图需要的数据结构
+interface HeatmapItem {
+  timestamp: number;
+  value: number;
+}
+
+// 今天日期
+const todayDate = computed(() => {
+  return new Date().toISOString().split('T')[0];
+});
+
+// 实际日期范围（调试用）
+const actualDateRange = computed(() => {
+  if (!heatmapData.value.length) return '无数据';
+  
+  const dates = heatmapData.value.map(item => new Date(item.timestamp));
+  const startDate = new Date(Math.min(...dates.map(d => d.getTime())));
+  const endDate = new Date(Math.max(...dates.map(d => d.getTime())));
+  
+  return `${startDate.toISOString().split('T')[0]} 至 ${endDate.toISOString().split('T')[0]}`;
+});
+
+// 最近365条数据的日期范围
+const recentDateRange = computed(() => {
+  if (!finalHeatmapData.value.length) return '无数据';
+  
+  const dates = finalHeatmapData.value.map(item => new Date(item.timestamp));
+  const startDate = new Date(Math.min(...dates.map(d => d.getTime())));
+  const endDate = new Date(Math.max(...dates.map(d => d.getTime())));
+  
+  return `${startDate.toISOString().split('T')[0]} 至 ${endDate.toISOString().split('T')[0]}`;
+});
+
+// 有效数据计数
+const validDataCount = computed(() => {
+  return finalHeatmapData.value.filter(item => item.value > 0).length;
+});
+
+// 数据格式示例
+const dataFormatExample = computed(() => {
+  if (!finalHeatmapData.value.length) return '无数据';
+  const sample = finalHeatmapData.value.find(item => item.value > 0) || finalHeatmapData.value[0];
+  return sample ? `{ timestamp: ${sample.timestamp}, value: ${sample.value} }` : '无示例';
+});
+
+// 计算最近365条数据 - 严格保持 { timestamp: number, value: number } 格式
+const finalHeatmapData = computed((): HeatmapItem[] => {
+  if (!heatmapData.value.length) return [];
+  
+  console.log('=== 开始处理数据 ===');
+  console.log('原始数据条数:', heatmapData.value.length);
+  
+  // 按时间戳排序（从旧到新）
+  const sortedData = [...heatmapData.value].sort((a, b) => a.timestamp - b.timestamp);
+  
+  // 取最后365条数据（最近的一年）
+  const last365Data = sortedData.slice(-365);
+  
+  console.log('取最后365条数据后:', last365Data.length);
+  console.log('数据格式检查:', last365Data.slice(0, 3));
+  console.log('=== 数据处理完成 ===');
+  
+  return last365Data;
+});
+
+// 计算显示的时间范围
+const displayDateRange = computed(() => {
+  if (!finalHeatmapData.value.length) return '无数据';
+  
+  const dates = finalHeatmapData.value.map(item => new Date(item.timestamp));
+  const startDate = new Date(Math.min(...dates.map(d => d.getTime())));
+  const endDate = new Date(Math.max(...dates.map(d => d.getTime())));
+  
+  return `${startDate.toISOString().split('T')[0]} 至 ${endDate.toISOString().split('T')[0]}`;
+});
+
+// 检查缓存是否有效
+const checkCache = (): HeatmapItem[] | null => {
+  const cached = localStorage.getItem('github_heatmap_cache');
+  if (!cached) return null;
+  
+  try {
+    const cacheData = JSON.parse(cached);
+    const now = Date.now();
+    
+    if (now - cacheData.timestamp < CACHE_DURATION) {
+      console.log('使用缓存数据');
+      return cacheData.data;
+    } else {
+      console.log('缓存已过期');
+      localStorage.removeItem('github_heatmap_cache');
+    }
+  } catch (error) {
+    console.error('解析缓存数据失败:', error);
+    localStorage.removeItem('github_heatmap_cache');
+  }
+  
+  return null;
+};
+
+// 缓存时间（5小时）
+const CACHE_DURATION = 5 * 60 * 60 * 1000;
+
+// 将 GitHub API 数据转换为热力图格式
+const convertGitHubDataToHeatmapFormat = (githubData: any): HeatmapItem[] => {
+  if (!githubData || !githubData.contributions) {
+    console.error('GitHub API 返回的数据结构不正确');
+    return [];
+  }
+  
+  const heatmapData: HeatmapItem[] = [];
+  
+  githubData.contributions.forEach((contribution: any) => {
+    if (contribution.date && contribution.count !== undefined) {
+      const timestamp = new Date(contribution.date).getTime();
+      heatmapData.push({
+        timestamp: timestamp,
+        value: contribution.count
+      });
+    }
+  });
+  
+  console.log('转换后的热力图数据:', heatmapData.length, '条');
+  
+  // 按日期排序（从旧到新）
+  const sortedData = heatmapData.sort((a, b) => a.timestamp - b.timestamp);
+  console.log('排序后数据时间范围:');
+  if (sortedData.length > 0) {
+    const firstDate = new Date(sortedData[0].timestamp);
+    const lastDate = new Date(sortedData[sortedData.length - 1].timestamp);
+    console.log('最早:', firstDate.toISOString().split('T')[0]);
+    console.log('最晚:', lastDate.toISOString().split('T')[0]);
+  }
+  
+  return sortedData;
+};
+
+// 获取 GitHub 贡献数据
+const getHeatmapData = async () => {
+  // 先检查缓存
+  const cachedData = checkCache();
+  if (cachedData) {
+    console.log('从缓存加载数据:', cachedData.length, '条');
+    heatmapData.value = cachedData;
+    return;
+  }
+  
+  loading.value = true;
+  try {
+    console.log('开始请求GitHub贡献数据...');
+    const response = await axios.get('https://github-contributions-api.jogruber.de/v4/icelly-QAQ');
+    console.log('GitHub Contributions API响应成功，数据条数:', response.data.contributions.length);
+    
+    // 转换数据格式
+    const convertedData = convertGitHubDataToHeatmapFormat(response.data);
+    
+    if (convertedData.length > 0) {
+      heatmapData.value = convertedData;
+      
+      // 存储到缓存
+      const cacheData = {
+        data: convertedData,
+        timestamp: Date.now()
+      };
+      localStorage.setItem('github_heatmap_cache', JSON.stringify(cacheData));
+    } else {
+      console.error('数据转换后为空');
+      heatmapData.value = [];
+    }
+    
+  } catch (error) {
+    console.error('获取GitHub贡献数据失败:', error);
+    // 请求失败时设置为空数组，不生成虚拟数据
+    heatmapData.value = [];
+  } finally {
+    loading.value = false;
+  }
+};
+
+// 主题配置
 const themes = [
   { name: '绿色', value: 'green' },
-] as const
+] as const;
+
+// 组件挂载时获取数据
+onMounted(() => {
+  console.log('组件挂载，开始获取热力图数据...');
+  console.log('今天日期:', todayDate.value);
+  getHeatmapData();
+});
 </script>

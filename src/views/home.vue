@@ -33,15 +33,25 @@ import axios from 'axios'
 const heroMessage = ref("平平淡淡才是真，好好生活吧");
 const loading = ref(false)
 
+// 5小时的毫秒数
+const CACHE_DURATION = 5 * 60 * 60 * 1000
+
 const getHeroMessage = async () => {
   loading.value = true
   try {
-    // 方法1：使用 encode=text 参数直接返回文本
     const response = await axios.get('https://v1.hitokoto.cn/?encode=text')
-    console.log('API响应:', response) // 添加日志查看响应
+    console.log('API响应:', response)
     
-    heroMessage.value = response.data.replace(/[。]+$/, ''); // 去除结尾标点符号
-
+    const newMessage = response.data.replace(/[。]+$/, '');
+    heroMessage.value = newMessage;
+    
+    // 存储数据和请求时间
+    const cacheData = {
+      message: newMessage,
+      timestamp: Date.now()
+    }
+    localStorage.setItem('hitokoto_cache', JSON.stringify(cacheData))
+    
   } catch (error) {
     console.error('获取数据失败:', error)
     heroMessage.value = '获取一言失败，请重试'
@@ -50,8 +60,39 @@ const getHeroMessage = async () => {
   }
 }
 
-// 组件挂载时自动获取
+const checkCache = () => {
+  const cached = localStorage.getItem('hitokoto_cache')
+  
+  if (cached) {
+    try {
+      const cacheData = JSON.parse(cached)
+      const now = Date.now()
+      const timePassed = now - cacheData.timestamp
+      
+      if (timePassed < CACHE_DURATION) {
+        // 5小时内，使用缓存数据
+        heroMessage.value = cacheData.message
+        console.log('使用缓存数据，剩余冷却时间:', Math.round((CACHE_DURATION - timePassed) / 1000 / 60), '分钟')
+        return false // 不需要请求
+      } else {
+        // 超过5小时，清除过期缓存
+        localStorage.removeItem('hitokoto_cache')
+        console.log('缓存已过期，重新请求')
+      }
+    } catch (e) {
+      console.error('解析缓存数据失败:', e)
+      localStorage.removeItem('hitokoto_cache')
+    }
+  }
+  
+  return true // 需要请求
+}
+
+// 组件挂载时检查缓存
 onMounted(() => {
-  getHeroMessage()
+  if (checkCache()) {
+    // 如果没有缓存或缓存过期，则请求新数据
+    getHeroMessage()
+  }
 })
 </script>
