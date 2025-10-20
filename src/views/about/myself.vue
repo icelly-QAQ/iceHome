@@ -69,7 +69,7 @@
             </div>
             
             <div class="heatmap-info">
-              <n-spin v-if="loading" size="small" />
+              <div v-if="loading"></div>
               <template v-else>
                 显示时间: {{ displayDateRange }} | 数据天数: {{ finalHeatmapData.length }}
               </template>
@@ -130,8 +130,10 @@
               target="_blank"
             >
                 <template #icon>
-                    <!-- 使用简单的SVG图标 -->
-                    <img :src="BiliBiliIcon" class="icon" alt="B站" />
+                    <n-skeleton v-if="!biliLoaded" width="24px" height="24px" :sharp="true" />
+                    <img v-show="biliLoaded" :src="BiliBiliIcon" class="icon" alt="B站" @load="biliLoaded = true" @error="biliLoaded = false" />
+                    <!-- preload to trigger load event if needed -->
+                    <img v-if="!biliLoaded" :src="BiliBiliIcon" style="display:none" @load="biliLoaded = true" @error="biliLoaded = false" />
                 </template>
             </n-button>
 
@@ -145,7 +147,9 @@
               target="_blank"
             >
               <template #icon>
-                <img :src="GitHubIcon" class="icon" alt="GitHub" />
+                <n-skeleton v-if="!gitLoaded" width="24px" height="24px" :sharp="true" />
+                <img v-show="gitLoaded" :src="GitHubIcon" class="icon" alt="GitHub" @load="gitLoaded = true" @error="gitLoaded = false" />
+                <img v-if="!gitLoaded" :src="GitHubIcon" style="display:none" @load="gitLoaded = true" @error="gitLoaded = false" />
               </template>
             </n-button>
 
@@ -164,6 +168,14 @@
                 </svg>
               </template>
             </n-button>
+          </div>
+          <div style="margin-top: 25px;">
+            <n-h2>
+              RSS订阅~
+            </n-h2>
+            <n-h3>
+              敬请期待~
+            </n-h3>
           </div>
         </n-gi>
       </n-grid>
@@ -339,4 +351,8 @@ onMounted(() => {
   console.log('今天日期:', todayDate.value);
   getHeatmapData();
 });
+
+// icon load states
+const biliLoaded = ref(false)
+const gitLoaded = ref(false)
 </script>
