@@ -45,7 +45,7 @@
 
 /* 虚拟滚动容器样式 */
 .virtual-scroll-container {
-  height: calc(100vh - 20px);
+  height: calc(100vh - 60px);
   overflow-y: auto;
   position: relative;
 }
@@ -153,6 +153,7 @@
         @scroll="handleScroll"
         ref="scrollContainer"
       >
+        <n-back-top :right="100" />
         <!-- 占位元素，用于计算总滚动高度 -->
         <div 
           class="scroll-placeholder" 
@@ -172,7 +173,7 @@
               class="article-item"
             >
 
-              <n-card class="card">
+              <n-card class="card" style="padding: 7px;">
                 <div class="card-content">
                   <h3 class="card-title">{{ article.title }}</h3>
                   <div class="card-meta">
@@ -180,10 +181,14 @@
                       {{ formatDate(article.created_at) }}
                       <n-icon><EyeOutline /></n-icon>
                       <div style="margin-left: -10px;">{{ article.views }}</div>
+                      <n-icon><BookmarkOutline /></n-icon>
+                      <div style="margin-left: -10px;">{{ article.category }}</div>
                     </n-flex>
                   </div>
-                  <div style="display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; line-clamp: 3; display: box; box-orient: vertical; overflow: hidden; text-overflow: ellipsis;">
-                    {{ article.content }}
+                  <div style="white-space: pre-wrap; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; line-clamp: 3; display: box; box-orient: vertical; overflow: hidden; text-overflow: ellipsis;">
+                    <n-ellipsis :line-clamp="5" tooltip="false">
+                      {{ removeHtmlTags(article.content) }}
+                    </n-ellipsis>
                   </div>
                 </div>
               </n-card>
@@ -219,7 +224,8 @@ import { ref, onMounted, nextTick, computed, watch } from "vue";
 import axios from "axios";
 
 import {
-  EyeOutline
+  EyeOutline,
+  BookmarkOutline,
 } from "@vicons/ionicons5";
 
 // 定义文章类型
@@ -228,6 +234,7 @@ interface Article {
   title: string;
   content: string;
   views: number;
+  category: string;
   created_at: string;
 }
 
@@ -273,6 +280,29 @@ const formatDate = (dateString: string) => {
     month: 'long',
     day: 'numeric'
   });
+};
+
+// 移除HTML标签，但保留并解析换行标签
+const removeHtmlTags = (html: string): string => {
+  if (!html) return '';
+  
+  // 首先将<br>和<br/>转换为换行符
+  let text = html.replace(/<br\s*\/?>/gi, '\n');
+  
+  // 将<p>标签和其结束标签</p>转换为换行符（两个换行符表示段落）
+  text = text.replace(/<\/?p\s*[^>]*>/gi, '\n\n');
+  
+  // 移除其他HTML标签
+  text = text.replace(/<[^>]+>/g, '');
+  
+  // 清理多余的空白字符（保留换行符）
+  text = text.replace(/[ \t]+/g, ' ');
+  
+  // 移除连续的换行符，保留最多两个换行符（表示段落分隔）
+  text = text.replace(/\n{2,}/g, '\n');
+  
+  // 移除首尾空白字符
+  return text.trim();
 };
 
 // 获取文章数据
