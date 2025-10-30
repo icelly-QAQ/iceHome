@@ -12,8 +12,7 @@
   min-height: 0; /* allow children to control scrolling */
   display: flex;
   flex-direction: column;
-  background-image: url(/src/assets/static/backgrounds/1.jpg);
-  background-size: cover;
+  background-image: url('@/assets/static/backgrounds/1.jpg');
   background-position: center;
   background-repeat: no-repeat;
 }
@@ -105,11 +104,11 @@
               </template>
             </n-button>
             <n-avatar
-              color="255, 255, 255, 0.9"
-              :size="32"
-              src="src/assets/static/frameStatic/Y-LIEF.png"
-              style="margin-left: 5px"
-            />
+                color="255, 255, 255, 0.9"
+                :size="32"
+                :src="yLiefImage"
+                style="margin-left: 5px"
+              />
             <n-h2 style="font-size: 18px; margin: 0"> icelly_QAQ </n-h2>  <!-- 调整标题样式 -->
           </n-flex>
         </n-layout-header>
@@ -130,7 +129,7 @@
                 round
                 style="margin-top: 15px;"
                 :size="64"
-                src="src/assets/static/frameStatic/avatar.jpg"
+                :src="avatarImage"
               />
             </n-flex>
             <n-divider style="margin-top: 5px"> icelly_QAQ </n-divider>
@@ -176,6 +175,10 @@ import { NIcon } from "naive-ui";
 import { h, ref, type Component } from "vue";
 import { RouterLink } from "vue-router";
 
+// 导入静态图片
+import yLiefImageSrc from '@/assets/static/frameStatic/Y-LIEF.png';
+import avatarImageSrc from '@/assets/static/frameStatic/avatar.jpg';
+
 import {
   HomeOutline as HomeIcon,
   PersonOutline as PersonIcon,
@@ -190,6 +193,10 @@ import {
 const renderIcon = (icon: Component) => {
   return () => h(NIcon, null, { default: () => h(icon) });
 };
+
+// 定义图片变量，使其在模板和样式中可用
+const yLiefImage = yLiefImageSrc;
+const avatarImage = avatarImageSrc;
 
 const menuOptions: MenuOption[] = [
   {

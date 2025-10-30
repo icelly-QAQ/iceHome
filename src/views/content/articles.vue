@@ -35,12 +35,34 @@
 .loading-container {
   text-align: center;
   color: #666;
+  padding: 40px 0;
+  min-height: 100px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .no-more-container {
-  padding: 20px;
+  padding: 40px 0;
   text-align: center;
   color: #999;
+  min-height: 100px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* 确保加载卡片有足够的高度 */
+.load-card {
+  height: 100px;
+  min-width: 200px;
+  border-radius: 15px;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  background: rgba(255, 255, 255, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 /* 虚拟滚动容器样式 */
@@ -48,6 +70,17 @@
   height: calc(100vh - 60px);
   overflow-y: auto;
   position: relative;
+}
+
+/* 文章列表容器样式 - 隐藏滚动条 */
+.article-list-container {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.article-list-container::-webkit-scrollbar {
+  width: 0px;
+  height: 0px;
 }
 
 :deep(.virtual-scroll-container) {
@@ -146,73 +179,61 @@
     </n-card>
   </n-flex>
 
-  <div v-if="loadStstus == 2">
-      <!-- 虚拟滚动容器 -->
+  <div v-if="loadStstus === 2">
+      <!-- 简单的文章列表渲染 -->
       <div 
-        class="virtual-scroll-container" 
+        class="article-list-container" 
         @scroll="handleScroll"
         ref="scrollContainer"
+        style="overflow-y: auto; height: calc(100vh - 60px);"
       >
         <n-back-top :right="100" />
-        <!-- 占位元素，用于计算总滚动高度 -->
-        <div 
-          class="scroll-placeholder" 
-          :style="{ height: totalHeight + 'px' }"
-        ></div>
-        
-        <!-- 实际渲染可见项目的容器 -->
-        <div 
-          class="visible-items-container" 
-          :style="{ transform: `translateY(${calculatedOffsetY}px)`, position: 'absolute' }"
-        >
-          <!-- 文章网格布局 -->
-          <div class="article-grid">
-            <div 
-              v-for="article in visibleArticles" 
-              :key="article.id"
-              class="article-item"
-            >
-
-              <n-card class="card" style="padding: 7px;">
-                <div class="card-content">
-                  <h3 class="card-title">{{ article.title }}</h3>
-                  <div class="card-meta">
-                    <n-flex align="center">
-                      {{ formatDate(article.created_at) }}
-                      <n-icon><EyeOutline /></n-icon>
-                      <div style="margin-left: -10px;">{{ article.views }}</div>
-                      <n-icon><BookmarkOutline /></n-icon>
-                      <div style="margin-left: -10px;">{{ article.category }}</div>
-                    </n-flex>
-                  </div>
-                  <div style="white-space: pre-wrap; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; line-clamp: 3; display: box; box-orient: vertical; overflow: hidden; text-overflow: ellipsis;">
-                    <n-ellipsis :line-clamp="5" tooltip="false">
-                      {{ removeHtmlTags(article.content) }}
-                    </n-ellipsis>
-                  </div>
+        <!-- 文章网格布局 -->
+        <div class="article-grid">
+          <div 
+            v-for="article in visibleArticles" 
+            :key="article.id"
+            class="article-item"
+          >
+            <n-card class="card" style="padding: 7px;">
+              <div class="card-content">
+                <h3 class="card-title">{{ article.title }}</h3>
+                <div class="card-meta">
+                  <n-flex align="center">
+                    {{ formatDate(article.created_at) }}
+                    <n-icon><EyeOutline /></n-icon>
+                    <div style="margin-left: -10px;">{{ article.views }}</div>
+                    <n-icon><BookmarkOutline /></n-icon>
+                    <div style="margin-left: -10px;">{{ article.category }}</div>
+                  </n-flex>
                 </div>
+                <div style="white-space: pre-wrap; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; line-clamp: 3; display: box; box-orient: vertical; overflow: hidden; text-overflow: ellipsis;">
+                  <n-ellipsis :line-clamp="5" tooltip="false">
+                    {{ removeHtmlTags(article.content) }}
+                  </n-ellipsis>
+                </div>
+              </div>
+            </n-card>
+          </div>
+        </div>
+        
+        <!-- 加载状态 -->
+        <div v-if="isLoading && currentPage > 1" class="loading-container">
+          <div class="loading-grid">
+            <div class="loading-slot">
+              <n-card class="load-card">
+                <n-flex justify="center" align="center">
+                  <n-spin size="small" />
+                  <div style="margin-left:8px">加载中...</div>
+                </n-flex>
               </n-card>
             </div>
           </div>
-          
-          <!-- 加载状态 -->
-          <div v-if="isLoading && currentPage > 1" class="loading-container">
-            <div class="loading-grid">
-              <div class="loading-slot">
-                <n-card class="load-card">
-                  <n-flex justify="center" align="center">
-                    <n-spin size="small" />
-                    <div style="margin-left:8px">加载中...</div>
-                  </n-flex>
-                </n-card>
-              </div>
-            </div>
-          </div>
-          
-          <!-- 没有更多数据 -->
-          <div v-else-if="doneLoading" class="no-more-container">
-            <div>没有更多文章了</div>
-          </div>
+        </div>
+        
+        <!-- 没有更多数据 -->
+        <div v-else-if="doneLoading" class="no-more-container">
+          <div>没有更多文章了</div>
         </div>
       </div>
     </div>
@@ -220,7 +241,7 @@
 
 <script setup lang="ts">
 import { NIcon } from "naive-ui";
-import { ref, onMounted, nextTick, computed, watch } from "vue";
+import { ref, onMounted, nextTick, computed, watch, onUnmounted } from "vue";
 import axios from "axios";
 
 import {
@@ -248,6 +269,7 @@ interface Pagination {
   has_prev: boolean;
 }
 
+// 状态管理
 const loadStstus = ref(1); // loading: 1, success: 2, error: 3
 const articles = ref<Article[]>([]);
 const currentPage = ref(1);
@@ -259,16 +281,22 @@ const pagination = ref<Pagination>({
   has_next: false,
   has_prev: false
 });
-const doneLoading = ref(false);
+const doneLoading = ref(false); // 确保初始值为false，允许加载更多
 const isLoading = ref(false);
+console.log('组件初始化 - doneLoading:', doneLoading.value, 'has_next:', pagination.value.has_next);
 
-// 虚拟滚动相关状态
+// 滚动容器引用
 const scrollContainer = ref<HTMLElement>();
-const bufferSize = 5; // 单列布局时适当增加缓冲区
-const itemsPerRow = ref(1); // 每行显示1个卡片
-const itemHeight = 300; // 每个卡片(包括间距)的预估高度
-const containerHeight = ref(0);
-const scrollTop = ref(0);
+
+// 简单的滚动状态管理
+const scrollPosition = ref(0);
+
+// 组件卸载时清理定时器
+onUnmounted(() => {
+  if (scrollTimeout !== null) {
+    window.clearTimeout(scrollTimeout);
+  }
+});
 
 // 固定单列布局，不需要响应式调整
 
@@ -286,30 +314,35 @@ const formatDate = (dateString: string) => {
 const removeHtmlTags = (html: string): string => {
   if (!html) return '';
   
-  // 首先将<br>和<br/>转换为换行符
-  let text = html.replace(/<br\s*\/?>/gi, '\n');
-  
-  // 将<p>标签和其结束标签</p>转换为换行符（两个换行符表示段落）
-  text = text.replace(/<\/?p\s*[^>]*>/gi, '\n\n');
-  
-  // 移除其他HTML标签
-  text = text.replace(/<[^>]+>/g, '');
-  
-  // 清理多余的空白字符（保留换行符）
-  text = text.replace(/[ \t]+/g, ' ');
-  
-  // 移除连续的换行符，保留最多两个换行符（表示段落分隔）
-  text = text.replace(/\n{2,}/g, '\n');
-  
-  // 移除首尾空白字符
-  return text.trim();
+  try {
+    // 首先将<br>和<br/>转换为换行符
+    let text = html.replace(/<br\s*\/?>/gi, '\n');
+    
+    // 将<p>标签和其结束标签</p>转换为换行符（两个换行符表示段落）
+    text = text.replace(/<\/?p\s*[^>]*>/gi, '\n\n');
+    
+    // 移除其他HTML标签
+    text = text.replace(/<[^>]+>/g, '');
+    
+    // 清理多余的空白字符（保留换行符）
+    text = text.replace(/[ \t]+/g, ' ');
+    
+    // 移除连续的换行符，保留最多两个换行符（表示段落分隔）
+    text = text.replace(/\n{3,}/g, '\n\n');
+    
+    // 移除首尾空白字符
+    return text.trim();
+  } catch (error) {
+    console.error('HTML标签处理出错:', error);
+    return html.slice(0, 200); // 返回部分原文作为降级方案
+  }
 };
 
 // 获取文章数据
 const fetchArticles = async (page: number = 1) => {
   try {
     // 传递per_page参数，控制每页加载数量
-    const response = await axios.get(`http://localhost:5000/api/v1/articles?page=${page}&per_page=${pagination.value.per_page}`);
+    const response = await axios.get(`https://back.icelly.xyz/api/v1/articles?page=${page}&per_page=${pagination.value.per_page}`);
     
     if (response.data && response.data.articles) {
       if (page === 1) {
@@ -337,105 +370,106 @@ const fetchArticles = async (page: number = 1) => {
   }
 };
 
-// 计算总高度 - 考虑网格布局
-const totalHeight = computed(() => {
-  const rows = Math.ceil(articles.value.length / itemsPerRow.value);
-  return rows * itemHeight;
-});
-
-// 计算可见的文章索引范围 - 考虑网格布局
-const visibleRange = computed(() => {
-  // 根据滚动位置计算可见的起始行和结束行
-  const startRow = Math.max(0, Math.floor(scrollTop.value / itemHeight) - bufferSize);
-  const endRow = Math.min(
-    Math.ceil(articles.value.length / itemsPerRow.value),
-    Math.ceil((scrollTop.value + containerHeight.value) / itemHeight) + bufferSize
-  );
-  
-  // 转换为文章索引
-  const start = startRow * itemsPerRow.value;
-  const end = Math.min(articles.value.length, endRow * itemsPerRow.value);
-  
-  return { start, end };
-});
-
-// 计算应该显示的文章列表
+// 简单的滚动加载实现，无需复杂的虚拟滚动计算
 const visibleArticles = computed(() => {
-  const { start, end } = visibleRange.value;
-  return articles.value.slice(start, end);
+  return articles.value;
 });
 
-// 计算垂直偏移 - 基于行
-const calculatedOffsetY = computed(() => {
-  const startRow = Math.max(0, Math.floor(scrollTop.value / itemHeight) - bufferSize);
-  return startRow * itemHeight;
-});
+// 容器高度相关状态
+const containerHeight = ref(0);
 
-// 处理滚动事件
+
+// 滚动事件处理
 let scrollTimeout: number | null = null;
 const handleScroll = (event: Event) => {
   const target = event.target as HTMLElement;
-  scrollTop.value = target.scrollTop;
-  containerHeight.value = target.clientHeight;
+  if (!target) return;
   
+  // 保存当前滚动位置
+  scrollPosition.value = target.scrollTop;
   
-  
-  // 检查是否需要加载更多
-  if (!isLoading.value && !doneLoading.value) {
-    // 当滚动到底部附近时触发加载
-    if (target.scrollHeight - target.scrollTop - target.clientHeight < 500) {
-      // 防抖处理
-      if (scrollTimeout) {
-        window.clearTimeout(scrollTimeout);
-      }
-      
-      scrollTimeout = window.setTimeout(async () => {
-        await loadMoreArticles();
-      }, 300);
-    }
+  // 防抖处理
+  if (scrollTimeout !== null) {
+    clearTimeout(scrollTimeout);
   }
+  
+  scrollTimeout = window.setTimeout(() => {
+    const scrollHeight = target.scrollHeight;
+    const clientHeight = target.clientHeight;
+    const currentScrollTop = target.scrollTop;
+    
+    // 当滚动到距离底部100px时加载更多
+    const threshold = 100;
+    
+    if (scrollHeight - (currentScrollTop + clientHeight) < threshold && 
+        !isLoading.value && 
+        !doneLoading.value) {
+      loadMoreArticles();
+    }
+  }, 100);
 };
 
 // 加载更多文章
 const loadMoreArticles = async () => {
-  if (isLoading.value || doneLoading.value) return;
+  console.log('触发加载更多...');
   
-  isLoading.value = true;
+  // 防止重复加载
+  if (isLoading.value || doneLoading.value) {
+    return;
+  }
   
   try {
-    if (pagination.value.has_next) {
-      const nextPage = currentPage.value + 1;
-      const result = await fetchArticles(nextPage);
+    isLoading.value = true;
+    
+    // 请求下一页数据
+    const nextPage = currentPage.value + 1;
+    console.log(`请求第${nextPage}页数据`);
+    const result = await fetchArticles(nextPage);
+    
+    if (result.success && result.data && result.data.length > 0) {
+      currentPage.value = nextPage;
       
-      if (result.success) {
-        currentPage.value = nextPage;
-        
-        // 检查是否还有更多数据
-        if (!pagination.value.has_next) {
-          doneLoading.value = true;
-        }
-      }
+      // 关键修复：使用pagination.value.has_next来判断是否还有更多数据
+      // 而不是仅仅依靠返回的数据长度
+      doneLoading.value = !pagination.value.has_next;
+      console.log(`加载成功，还有更多数据: ${pagination.value.has_next}`);
     } else {
-      doneLoading.value = true;
+      console.log('没有更多数据或加载失败');
+      // 只有在确实没有数据时才标记为完成
+      // 加载失败时不要立即标记为done，允许重试
+      if (result.success && (!result.data || result.data.length === 0)) {
+        doneLoading.value = true;
+      }
     }
   } catch (error) {
-    console.error("加载更多文章失败:", error);
-  } finally {
-    // 延迟设置为false，避免快速连续触发
+    console.error('加载更多文章时发生错误:', error);
+    // 添加错误重试机制
     setTimeout(() => {
-      isLoading.value = false;
-    }, 300);
+      if (!isLoading.value && !doneLoading.value) {
+        loadMoreArticles();
+      }
+    }, 1500);
+  } finally {
+    isLoading.value = false;
   }
 };
 
 // 监听文章变化，更新虚拟滚动状态
 watch(() => articles.value.length, () => {
   nextTick(() => {
+    // 移除直接触发scroll事件，避免循环更新
     if (scrollContainer.value) {
-      // 重新计算布局
-      handleScroll({ target: scrollContainer.value } as unknown as Event);
+      // 仅更新必要的状态，而不是重新触发整个滚动逻辑
+      containerHeight.value = scrollContainer.value.clientHeight;
     }
   });
+});
+
+// 组件卸载时清理定时器，防止内存泄漏
+onUnmounted(() => {
+  if (scrollTimeout !== null) {
+    window.clearTimeout(scrollTimeout);
+  }
 });
 
 // 使用 onMounted 生命周期钩子
@@ -447,6 +481,12 @@ onMounted(async () => {
     
     if (result.success) {
       loadStstus.value = 2;
+      // 确保容器高度正确设置
+      nextTick(() => {
+        if (scrollContainer.value) {
+          containerHeight.value = scrollContainer.value.clientHeight;
+        }
+      });
     } else {
       loadStstus.value = 3;
     }

@@ -77,6 +77,20 @@
   padding: 16px;
 }
 
+/* 随笔列表容器样式 - 隐藏滚动条 */
+.article-list-container {
+  height: calc(100vh - 60px);
+  overflow-y: auto;
+  position: relative;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.article-list-container::-webkit-scrollbar {
+  width: 0px;
+  height: 0px;
+}
+
 .loading-grid {
   max-width: 800px;
   margin: 0 auto;
@@ -138,72 +152,52 @@
   </n-flex>
 
   <div v-if="loadStstus == 2">
-      <!-- 虚拟滚动容器 -->
-      <div 
-        class="virtual-scroll-container" 
-        @scroll="handleScroll"
-        ref="scrollContainer"
-      >
-        <n-back-top :right="100" />
-        <!-- 占位元素，用于计算总滚动高度 -->
+    <!-- 滚动容器 -->
+    <div 
+      class="article-list-container" 
+      @scroll="handleScroll"
+      ref="scrollContainer"
+    >
+      <n-back-top :right="100" />
+      
+      <!-- 文章网格布局 -->
+      <div class="article-grid">
         <div 
-          class="scroll-placeholder" 
-          :style="{ height: totalHeight + 'px' }"
-        ></div>
-        
-        <!-- 实际渲染可见项目的容器 -->
-        <div 
-          class="visible-items-container" 
-          :style="{ transform: `translateY(${calculatedOffsetY}px)`, position: 'absolute' }"
+          v-for="note in notes" 
+          :key="note.id"
+          class="article-item"
         >
-          <!-- 文章网格布局 -->
-          <div class="article-grid">
-            <div 
-              v-for="note in visibleNotes" 
-              :key="note.id"
-              class="article-item"
-            >
-
-              <n-card class="card" style="padding: 5px;">
-                <div class="card-content">
-                  <div class="card-meta">
-                    <n-flex align="center">
-                      {{ formatDate(note.created_at) }}
-                    </n-flex>
-                  </div>
-                  <div>
-                    {{ note.content }}
-                  </div>
-                </div>
-              </n-card>
-            </div>
-          </div>
-          
-          <!-- 加载状态 -->
-          <div v-if="isLoading && currentPage > 1" class="loading-container">
-            <div class="loading-grid">
-              <div class="loading-slot">
-                <n-card class="load-card">
-                  <n-flex justify="center" align="center">
-                    <n-spin size="small" />
-                    <div style="margin-left:8px">加载中...</div>
-                  </n-flex>
-                </n-card>
+          <n-card class="card" style="padding: 5px;">
+            <div class="card-content">
+              <div class="card-meta">
+                <n-flex align="center">
+                  {{ formatDate(note.created_at) }}
+                </n-flex>
+              </div>
+              <div>
+                {{ note.content }}
               </div>
             </div>
-          </div>
-          
-          <!-- 没有更多数据 -->
-          <div v-else-if="doneLoading" class="no-more-container">
-            <div>没有更多随笔了</div>
-          </div>
+          </n-card>
         </div>
       </div>
+      
+      <!-- 加载状态 -->
+      <div v-if="isLoading && currentPage > 1" class="loading-container">
+        <n-spin size="small" />
+        <span style="margin-left: 8px;">加载中...</span>
+      </div>
+      
+      <!-- 没有更多数据 -->
+      <div v-else-if="doneLoading" class="no-more-container">
+        <div>没有更多随笔了</div>
+      </div>
     </div>
+  </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, nextTick, computed, watch } from "vue";
+import { ref, onMounted, nextTick, onUnmounted } from "vue";
 import axios from "axios";
 
 // 定义随笔类型
@@ -229,24 +223,15 @@ const notes = ref<Note[]>([]);
 const currentPage = ref(1);
 const pagination = ref<Pagination>({
   page: 1,
-  per_page: 8, // 恢复到适中的每页数量
+  per_page: 8, // 每页数量
   total: 0,
   pages: 0,
   has_next: false,
   has_prev: false
 });
-const doneLoading = ref(false);
+const doneLoading = ref(false); // 标记是否已加载全部数据
 const isLoading = ref(false);
-
-// 虚拟滚动相关状态
 const scrollContainer = ref<HTMLElement>();
-const bufferSize = 5; // 单列布局时适当增加缓冲区
-const itemsPerRow = ref(1); // 每行显示1个卡片
-const itemHeight = 300; // 每个卡片(包括间距)的预估高度
-const containerHeight = ref(0);
-const scrollTop = ref(0);
-
-// 固定单列布局，不需要响应式调整
 
 // 格式化日期
 const formatDate = (dateString: string) => {
@@ -261,14 +246,12 @@ const formatDate = (dateString: string) => {
 // 获取随笔数据
 const fetchNotes = async (page: number = 1) => {
   try {
-    // 传递per_page参数，控制每页加载数量
-    const response = await axios.get(`http://localhost:5000/api/v1/notes?page=${page}&per_page=${pagination.value.per_page}`);
+    const response = await axios.get(`https://back.icelly.xyz/api/v1/notes?page=${page}&per_page=${pagination.value.per_page}`);
     
     if (response.data && response.data.notes) {
       if (page === 1) {
         notes.value = response.data.notes;
       } else {
-        // 优化：避免不必要的数组展开操作
         notes.value.push(...response.data.notes);
       }
       
@@ -290,127 +273,97 @@ const fetchNotes = async (page: number = 1) => {
   }
 };
 
-// 计算总高度 - 考虑网格布局
-const totalHeight = computed(() => {
-  const rows = Math.ceil(notes.value.length / itemsPerRow.value);
-  return rows * itemHeight;
-});
-
-// 计算可见的随笔索引范围 - 考虑网格布局
-const visibleRange = computed(() => {
-  // 根据滚动位置计算可见的起始行和结束行
-  const startRow = Math.max(0, Math.floor(scrollTop.value / itemHeight) - bufferSize);
-  const endRow = Math.min(
-    Math.ceil(notes.value.length / itemsPerRow.value),
-    Math.ceil((scrollTop.value + containerHeight.value) / itemHeight) + bufferSize
-  );
-  
-  // 转换为随笔索引
-  const start = startRow * itemsPerRow.value;
-  const end = Math.min(notes.value.length, endRow * itemsPerRow.value);
-  
-  return { start, end };
-});
-
-// 计算应该显示的随笔列表
-const visibleNotes = computed(() => {
-  const { start, end } = visibleRange.value;
-  return notes.value.slice(start, end);
-});
-
-// 计算垂直偏移 - 基于行
-const calculatedOffsetY = computed(() => {
-  const startRow = Math.max(0, Math.floor(scrollTop.value / itemHeight) - bufferSize);
-  return startRow * itemHeight;
-});
-
-// 处理滚动事件
+// 滚动事件处理 - 防抖处理
 let scrollTimeout: number | null = null;
 const handleScroll = (event: Event) => {
-  const target = event.target as HTMLElement;
-  scrollTop.value = target.scrollTop;
-  containerHeight.value = target.clientHeight;
-  
-  
-  
-  // 检查是否需要加载更多
-  if (!isLoading.value && !doneLoading.value) {
-    // 当滚动到底部附近时触发加载
-    if (target.scrollHeight - target.scrollTop - target.clientHeight < 500) {
-      // 防抖处理
-      if (scrollTimeout) {
-        window.clearTimeout(scrollTimeout);
-      }
-      
-      scrollTimeout = window.setTimeout(async () => {
-        await loadMoreNotes();
-      }, 300);
-    }
+  // 清除之前的定时器
+  if (scrollTimeout) {
+    clearTimeout(scrollTimeout);
   }
+  
+  // 设置新的定时器，延迟执行
+  scrollTimeout = window.setTimeout(() => {
+    const target = event.target as HTMLElement;
+    const scrollTop = target.scrollTop;
+    const scrollHeight = target.scrollHeight;
+    const clientHeight = target.clientHeight;
+    
+    // 当滚动到距离底部100px时触发加载
+    if (scrollHeight - scrollTop - clientHeight < 100) {
+      loadMoreNotes();
+    }
+  }, 100);
 };
 
 // 加载更多随笔
 const loadMoreNotes = async () => {
+  // 避免重复加载
   if (isLoading.value || doneLoading.value) return;
   
+  console.log(`请求第 ${currentPage.value + 1} 页数据`);
   isLoading.value = true;
   
   try {
-    if (pagination.value.has_next) {
-      const nextPage = currentPage.value + 1;
-      const result = await fetchNotes(nextPage);
+    const nextPage = currentPage.value + 1;
+    const result = await fetchNotes(nextPage);
+    
+    if (result.success) {
+      currentPage.value = nextPage;
       
-      if (result.success) {
-        currentPage.value = nextPage;
-        
-        // 检查是否还有更多数据
-        if (!pagination.value.has_next) {
-          doneLoading.value = true;
-        }
+      // 基于has_next判断是否还有更多数据
+      if (!pagination.value.has_next) {
+        console.log('没有更多数据了');
+        doneLoading.value = true;
       }
-    } else {
-      doneLoading.value = true;
     }
   } catch (error) {
     console.error("加载更多随笔失败:", error);
+    // 失败时不标记doneLoading，允许用户重试
   } finally {
-    // 延迟设置为false，避免快速连续触发
-    setTimeout(() => {
-      isLoading.value = false;
-    }, 300);
+    isLoading.value = false;
   }
 };
 
-// 监听随笔变化，更新虚拟滚动状态
-watch(() => notes.value.length, () => {
-  nextTick(() => {
-    if (scrollContainer.value) {
-      // 重新计算布局
-      handleScroll({ target: scrollContainer.value } as unknown as Event);
-    }
-  });
-});
+// 监听随笔变化，更新容器高度
+const updateContainerHeight = () => {
+  // 此函数用于在数据加载后确保滚动容器正确计算高度
+};
 
 // 使用 onMounted 生命周期钩子
 onMounted(async () => {
   try {
     console.log("开始获取随笔数据...");
+    console.log(`初始状态 - doneLoading: ${doneLoading.value}, has_next: ${pagination.value.has_next}`);
     isLoading.value = true;
     const result = await fetchNotes(1);
     
     if (result.success) {
       loadStstus.value = 2;
+      // 确保初始化时正确设置doneLoading状态
+      if (!pagination.value.has_next) {
+        doneLoading.value = true;
+      }
     } else {
       loadStstus.value = 3;
     }
     
-    console.log("获取到的随笔数据:", notes.value);
+    // 在下一个渲染周期后更新容器高度
+    nextTick(() => {
+      updateContainerHeight();
+    });
   } catch (error) {
     console.error("初始化随笔加载失败:", error);
     loadStstus.value = 3;
     notes.value = [];
   } finally {
     isLoading.value = false;
+  }
+});
+
+// 组件卸载时清理定时器
+onUnmounted(() => {
+  if (scrollTimeout) {
+    clearTimeout(scrollTimeout);
   }
 });
 </script>
