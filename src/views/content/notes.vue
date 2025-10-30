@@ -128,7 +128,7 @@
 
 <template>
   <n-flex
-    v-if="loadStstus == 1"
+    v-if="loadStatus == 1"
     justify="center"
     align="center"
     style="height: 100vh"
@@ -137,7 +137,7 @@
   </n-flex>
 
   <n-flex
-    v-if="loadStstus == 3"
+    v-if="loadStatus == 3"
     justify="center"
     align="center"
     style="height: 100vh"
@@ -151,7 +151,7 @@
     </n-card>
   </n-flex>
 
-  <div v-if="loadStstus == 2">
+  <div v-if="loadStatus == 2">
     <!-- 滚动容器 -->
     <div 
       class="article-list-container" 
@@ -218,7 +218,7 @@ interface Pagination {
   has_prev: boolean;
 }
 
-const loadStstus = ref(1); // loading: 1, success: 2, error: 3
+const loadStatus = ref(1); // loading: 1, success: 2, error: 3
 const notes = ref<Note[]>([]);
 const currentPage = ref(1);
 const pagination = ref<Pagination>({
@@ -338,13 +338,13 @@ onMounted(async () => {
     const result = await fetchNotes(1);
     
     if (result.success) {
-      loadStstus.value = 2;
+      loadStatus.value = 2;
       // 确保初始化时正确设置doneLoading状态
       if (!pagination.value.has_next) {
         doneLoading.value = true;
       }
     } else {
-      loadStstus.value = 3;
+      loadStatus.value = 3;
     }
     
     // 在下一个渲染周期后更新容器高度
@@ -353,7 +353,7 @@ onMounted(async () => {
     });
   } catch (error) {
     console.error("初始化随笔加载失败:", error);
-    loadStstus.value = 3;
+    loadStatus.value = 3;
     notes.value = [];
   } finally {
     isLoading.value = false;

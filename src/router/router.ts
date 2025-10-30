@@ -28,6 +28,10 @@ const routes = [
             {
                 path: "notes",
                 component: () => import('@/views/content/notes.vue')
+            },
+            {
+                path: ":type/:id",
+                component: () => import('@/views/content/read.vue')
             }
         ]
     },

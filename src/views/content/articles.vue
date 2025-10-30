@@ -156,7 +156,7 @@
 
 <template>
   <n-flex
-    v-if="loadStstus == 1"
+    v-if="loadStatus === 1"
     justify="center"
     align="center"
     style="height: 100vh"
@@ -165,7 +165,7 @@
   </n-flex>
 
   <n-flex
-    v-if="loadStstus == 3"
+    v-if="loadStatus === 3"
     justify="center"
     align="center"
     style="height: 100vh"
@@ -179,7 +179,7 @@
     </n-card>
   </n-flex>
 
-  <div v-if="loadStstus === 2">
+  <div v-if="loadStatus === 2">
       <!-- 简单的文章列表渲染 -->
       <div 
         class="article-list-container" 
@@ -201,10 +201,10 @@
                 <div class="card-meta">
                   <n-flex align="center">
                     {{ formatDate(article.created_at) }}
-                    <n-icon><EyeOutline /></n-icon>
-                    <div style="margin-left: -10px;">{{ article.views }}</div>
-                    <n-icon><BookmarkOutline /></n-icon>
-                    <div style="margin-left: -10px;">{{ article.category }}</div>
+                    <n-icon type="eye-outline" style="margin-left: 5px;" />
+                    <div style="margin-left: 5px;">{{ article.views }}</div>
+                    <n-icon type="bookmark-outline" style="margin-left: 5px;" />
+                    <div style="margin-left: 5px;">{{ article.category }}</div>
                   </n-flex>
                 </div>
                 <div style="white-space: pre-wrap; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; line-clamp: 3; display: box; box-orient: vertical; overflow: hidden; text-overflow: ellipsis;">
@@ -244,10 +244,7 @@ import { NIcon } from "naive-ui";
 import { ref, onMounted, nextTick, computed, watch, onUnmounted } from "vue";
 import axios from "axios";
 
-import {
-  EyeOutline,
-  BookmarkOutline,
-} from "@vicons/ionicons5";
+
 
 // 定义文章类型
 interface Article {
@@ -270,7 +267,7 @@ interface Pagination {
 }
 
 // 状态管理
-const loadStstus = ref(1); // loading: 1, success: 2, error: 3
+const loadStatus = ref(1); // loading: 1, success: 2, error: 3
 const articles = ref<Article[]>([]);
 const currentPage = ref(1);
 const pagination = ref<Pagination>({
@@ -480,7 +477,7 @@ onMounted(async () => {
     const result = await fetchArticles(1);
     
     if (result.success) {
-      loadStstus.value = 2;
+      loadStatus.value = 2;
       // 确保容器高度正确设置
       nextTick(() => {
         if (scrollContainer.value) {
@@ -488,13 +485,13 @@ onMounted(async () => {
         }
       });
     } else {
-      loadStstus.value = 3;
+      loadStatus.value = 3;
     }
     
     console.log("获取到的文章数据:", articles.value);
   } catch (error) {
     console.error("初始化文章加载失败:", error);
-    loadStstus.value = 3;
+    loadStatus.value = 3;
     articles.value = [];
   } finally {
     isLoading.value = false;
