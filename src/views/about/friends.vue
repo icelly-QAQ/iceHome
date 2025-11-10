@@ -18,51 +18,51 @@
 
 <template>
   <div style="padding: 25px">
-    <n-flex justify="center">
-      <n-card
-        v-for="friend in friends"
-        :key="friend.name"
-        class="friend-card"
-        :title="friend.name"
-        :hoverable="true"
-        style="margin: 15px; width: 300px"
-      >
-        <template #cover>
-          <div
-            style="
-              position: relative;
-              height: 248px;
-              overflow: hidden;
-              border-top-left-radius: 15px;
-              border-top-right-radius: 15px;
-            "
-          >
-            <n-skeleton v-if="!friend.loaded" height="100%" :sharp="false" />
-            <img
-              v-show="friend.loaded"
-                :src="cachedSrc(friend.img).value"
-              :alt="friend.name"
-              class="friend-image"
-              @load="onLoad(friend)"
-              @error="onError(friend)"
-            />
+    <n-flex justify="center" style="gap: 45px; flex-wrap: wrap;">
+        <n-card
+          v-for="friend in friends"
+          :key="friend.name"
+          class="friend-card uniform-card"
+          :title="friend.name"
+          :hoverable="true"
+          style="width: 300px"
+        >
+          <template #cover>
+            <div
+              class="card-cover"
+              style="position: relative;"
+            >
+              <n-skeleton v-if="!friend.loaded" height="100%" :sharp="false" />
+              <img
+                v-show="friend.loaded"
+                  :src="cachedSrc(friend.img).value"
+                :alt="friend.name"
+                class="friend-image"
+                @load="onLoad(friend)"
+                @error="onError(friend)"
+              />
 
-            <img
-              v-if="!friend.loaded"
-                :src="cachedSrc(friend.img).value"
-              style="display: none"
-              @load="onLoad(friend)"
-              @error="onError(friend)"
-            />
+              <img
+                v-if="!friend.loaded"
+                  :src="cachedSrc(friend.img).value"
+                style="display: none"
+                @load="onLoad(friend)"
+                @error="onError(friend)"
+              />
+            </div>
+          </template>
+
+          <div class="card-body-inner">
+            <n-typography>
+              <p>{{ friend.info }}</p>
+              <div style="display:flex; justify-content:flex-end;">
+                <n-button tag="a" :href="friend.link" target="_blank">
+                  去看看
+                </n-button>
+              </div>
+            </n-typography>
           </div>
-        </template>
-        <n-typography>
-          <p>{{ friend.info }}</p>
-          <n-button tag="a" :href="friend.link" target="_blank" style="position: absolute; bottom: 15px;">
-            去看看
-          </n-button>
-        </n-typography>
-      </n-card>
+        </n-card>
     </n-flex>
   </div>
 </template>
