@@ -32,7 +32,7 @@
   border-radius: 15px;
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.5);
 }
 
 /* 响应式设计 */
