@@ -1,6 +1,39 @@
+<style scoped>
+.read-container {
+  padding: 20px;
+}
+
+.content-text {
+  white-space: pre-wrap;
+  line-height: 1.6;
+  font-size: 16px;
+}
+
+/* 卡片局部样式，整体外观由 .uniform-card 控制 */
+.uniform-card {
+  transition: all 0.3s ease;
+  overflow: hidden;
+}
+
+.local-card {
+  max-width: 316px;
+  border-radius: 15px;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  background: rgba(255, 255, 255, 0.5);
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .n-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+</style>
+
 <template>
   <div class="read-container">
-    <n-spin :show="loading">
+    <n-spin :show="loading" style="min-height: 90vh;">
       <div v-if="content">
         <n-h1 v-if="type === 'article'">{{ content.title }}</n-h1>
         <n-h1 v-else-if="type === 'note'">随笔 #{{ id }}</n-h1>
@@ -11,25 +44,24 @@
           <n-tag type="info">{{ formatDate(content.created_at) }}</n-tag>
           <n-tag type="success">浏览: {{ content.views }}</n-tag>
         </n-space>
-        
         <n-space v-else style="margin-bottom: 20px;">
           <n-tag type="info">{{ formatDate(content.created_at) }}</n-tag>
         </n-space>
-        
         <div class="content-text" v-html="sanitizeHtml(content.content)"></div>
       </div>
-      <div v-else-if="error">
-        <n-result 
-          status="500" 
-          title="500 服务器错误" 
-          description="服务器出错可能说明该雇更多程序员了" 
-        > 
-          <template #footer> 
-            <n-button @click="fetchContent">散财消灾</n-button> 
-            <n-button @click="goBack">返回</n-button>
-          </template> 
-        </n-result>
-      </div>
+
+      <n-flex justify="center">
+        <div v-if="error" style="text-align: center; padding: 40px 0; margin-top: 27vh;">
+          <n-card class="local-card">
+            <n-result 
+              status="500" 
+              title="500 服务器错误" 
+              description="如果不是笨蛋冰冰在瞎搞就是服务器坠机了" 
+            >
+            </n-result>
+          </n-card>
+        </div>
+      </n-flex>
     </n-spin>
   </div>
 </template>
@@ -42,8 +74,7 @@ import {
   NH1, 
   NSpace, 
   NTag, 
-  NResult, 
-  NButton 
+  NResult
 } from 'naive-ui';
 
 interface Content {
@@ -144,15 +175,3 @@ onMounted(() => {
   fetchContent();
 });
 </script>
-
-<style scoped>
-.read-container {
-  padding: 20px;
-}
-
-.content-text {
-  white-space: pre-wrap;
-  line-height: 1.6;
-  font-size: 16px;
-}
-</style>
