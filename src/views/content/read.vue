@@ -56,7 +56,7 @@
             <n-result 
               status="500" 
               title="500 服务器错误" 
-              description="如果不是笨蛋冰冰在瞎搞就是服务器坠机了" 
+              description="如果不是笨蛋冰冰在瞎搞就是服务器坠机啦" 
             >
             </n-result>
           </n-card>
