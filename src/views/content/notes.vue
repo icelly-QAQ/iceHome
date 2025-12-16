@@ -90,7 +90,7 @@
 
       <!-- 加载中但没有错误 -->
       <div v-else-if="!loading" style="text-align: center; padding: 40px 0;">
-        <p>暂无随笔数据</p>
+        <p>这里啥都没有诶~</p>
       </div>
     </n-spin>
   </div>
