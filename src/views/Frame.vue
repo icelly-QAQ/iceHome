@@ -15,6 +15,7 @@
   background-image: url('@/assets/static/backgrounds/1.jpg');
   background-position: center;
   background-repeat: no-repeat;
+  background-size: 100%
 }
 
 .frame-root :deep(.n-layout-content) {

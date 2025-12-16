@@ -12,7 +12,9 @@
 }
 
 .card-body-inner {
-  padding: 12px;
+  padding: 0px 13px 0px 13px;
+  min-height: 100px;
+  position: relative;
 }
 
 .pagination-container {
@@ -20,6 +22,24 @@
   display: flex;
   justify-content: center;
   width: 100%;
+}
+
+.card-footer {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: 0px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* 减小卡片标题与内容间距 */
+.uniform-card ::v-deep .n-card__header {
+  margin-bottom: 6px;
+}
+.uniform-card ::v-deep .n-card__content {
+  padding-top: 6px;
 }
 
 /* 卡片局部样式，整体外观由 .uniform-card 控制 */
@@ -74,7 +94,7 @@
                     {{ removeHtmlTags(article.content) }}
                   </n-ellipsis>
 
-                  <n-space justify="space-between" align="center" style="margin-top: 12px;">
+                  <n-space justify="space-between" align="center" class="card-footer">
                     <n-space>
                       <n-tag type="info">{{ formatDate(article.created_at) }}</n-tag>
                       <n-tag type="success">浏览: {{ article.views }}</n-tag>
@@ -96,12 +116,14 @@
 
         <!-- 分页组件 -->
         <div class="pagination-container">
-          <n-pagination
-            v-model:page="currentPage"
-            :page-count="totalPages"
-            :page-slot="5"
-            @update:page="handlePageChange"
-          />
+          <n-card class="local-card" style="width: fit-content; padding: 2px 2px;">
+            <n-pagination
+              v-model:page="currentPage"
+              :page-count="totalPages"
+              :page-slot="5"
+              @update:page="handlePageChange"
+            />
+          </n-card>
         </div>
       </div>
 
