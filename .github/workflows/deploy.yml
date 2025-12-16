@@ -1,3 +1,5 @@
+/* eslint-disable */
+
 name: Deploy Vue3 App to Server
 
 on:
