@@ -146,7 +146,7 @@ const fetchNotes = async (page: number = 1) => {
   try {
     loading.value = true;
     error.value = false;
-    // 从API获取笔记数据，支持分页
+    // 从API获取笔记数据
     const response = await fetch(`https://back.icelly.xyz/api/v1/notes?page=${page}&per_page=20`);
     
     if (!response.ok) {

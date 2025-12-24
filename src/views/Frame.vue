@@ -279,11 +279,9 @@ function renderMenuLabel(option: MenuOption) {
 }
 
 function renderMenuIcon(option: MenuOption) {
-  // 如果选项有自定义图标，使用它
   if (option.icon && typeof option.icon === 'function') {
     return option.icon();
   }
-  // 如果没有图标，返回 null 以避免占位符
   return null;
 }
 
